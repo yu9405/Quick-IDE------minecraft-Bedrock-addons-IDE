@@ -994,7 +994,7 @@ class Editor:
         ttk.Radiobutton(type_frame, text="酿造配方", variable=self.recipe_type, 
                        value="brewing", command=self.update_recipe_ui).grid(row=1, column=1, padx=5, pady=5, sticky="w")
         
-        # 配方信息框架
+        # 配方信息框架（通用）
         info_frame = ttk.LabelFrame(scrollable_frame, text="配方信息", padding="10")
         info_frame.grid(row=3, column=0, columnspan=3, pady=10, padx=10, sticky="ew")
         
@@ -1016,13 +1016,13 @@ class Editor:
         self.recipe_identifier.grid(row=2, column=1, pady=5, padx=5, sticky="w")
         ttk.Label(info_frame, text="例如: wiki:example_recipe", foreground="gray").grid(row=2, column=2, pady=5, padx=5, sticky="w")
         
-        # 合成输入框架
-        self.recipe_input_frame = ttk.LabelFrame(scrollable_frame, text="合成输入", padding="10")
-        self.recipe_input_frame.grid(row=4, column=0, columnspan=3, pady=10, padx=10, sticky="ew")
+        # ===== 有序/无序合成输入框架 =====
+        self.crafting_frame = ttk.LabelFrame(scrollable_frame, text="合成输入", padding="10")
+        # 先不设置grid，由update_recipe_ui控制显示
         
         # 创建3x3合成网格
         self.recipe_grid = []
-        grid_frame = ttk.Frame(self.recipe_input_frame)
+        grid_frame = ttk.Frame(self.crafting_frame)
         grid_frame.pack(pady=10)
         
         for i in range(3):
@@ -1034,16 +1034,43 @@ class Editor:
             self.recipe_grid.append(row)
         
         # 图案说明
-        pattern_label = ttk.Label(self.recipe_input_frame, 
+        pattern_label = ttk.Label(self.crafting_frame, 
                                  text="输入物品ID (空表示无物品)\n例如: minecraft:stone",
                                  justify=tk.CENTER, foreground="gray")
         pattern_label.pack()
         
-        # 熔炉配方特定框架
-        self.furnace_frame = ttk.Frame(scrollable_frame)
+        # ===== 熔炉配方专用框架 =====
+        self.furnace_frame = ttk.LabelFrame(scrollable_frame, text="熔炉配方设置", padding="10")
         
-        # 酿造配方特定框架
-        self.brewing_frame = ttk.Frame(scrollable_frame)
+        # 熔炉配方控件
+        ttk.Label(self.furnace_frame, text="输入物品:").grid(row=0, column=0, pady=5, padx=5, sticky="w")
+        self.furnace_input = ttk.Entry(self.furnace_frame, width=30)
+        self.furnace_input.grid(row=0, column=1, pady=5, padx=5, sticky="w")
+        ttk.Label(self.furnace_frame, text="例如: minecraft:iron_ore", foreground="gray").grid(row=0, column=2, pady=5, padx=5, sticky="w")
+        
+        ttk.Label(self.furnace_frame, text="经验值:").grid(row=1, column=0, pady=5, padx=5, sticky="w")
+        self.furnace_experience = ttk.Spinbox(self.furnace_frame, from_=0, to=10, increment=0.1, width=10)
+        self.furnace_experience.grid(row=1, column=1, pady=5, padx=5, sticky="w")
+        self.furnace_experience.insert(0, "0.1")
+        
+        ttk.Label(self.furnace_frame, text="烧炼时间:").grid(row=2, column=0, pady=5, padx=5, sticky="w")
+        self.furnace_time = ttk.Spinbox(self.furnace_frame, from_=1, to=1000, width=10)
+        self.furnace_time.grid(row=2, column=1, pady=5, padx=5, sticky="w")
+        self.furnace_time.insert(0, "200")
+        
+        # ===== 酿造配方专用框架 =====
+        self.brewing_frame = ttk.LabelFrame(scrollable_frame, text="酿造配方设置", padding="10")
+        
+        # 酿造配方控件
+        ttk.Label(self.brewing_frame, text="输入物品:").grid(row=0, column=0, pady=5, padx=5, sticky="w")
+        self.brewing_input = ttk.Entry(self.brewing_frame, width=30)
+        self.brewing_input.grid(row=0, column=1, pady=5, padx=5, sticky="w")
+        ttk.Label(self.brewing_frame, text="例如: minecraft:water_bottle", foreground="gray").grid(row=0, column=2, pady=5, padx=5, sticky="w")
+        
+        ttk.Label(self.brewing_frame, text="试剂:").grid(row=1, column=0, pady=5, padx=5, sticky="w")
+        self.brewing_reagent = ttk.Entry(self.brewing_frame, width=30)
+        self.brewing_reagent.grid(row=1, column=1, pady=5, padx=5, sticky="w")
+        ttk.Label(self.brewing_frame, text="例如: minecraft:nether_wart", foreground="gray").grid(row=1, column=2, pady=5, padx=5, sticky="w")
         
         # 保存路径框架
         path_frame = ttk.LabelFrame(scrollable_frame, text="保存路径", padding="10")
@@ -1072,6 +1099,32 @@ class Editor:
         preview_scrollbar = ttk.Scrollbar(self.recipe_json_preview, orient=tk.VERTICAL, command=self.recipe_json_preview.yview)
         preview_scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
         self.recipe_json_preview.config(yscrollcommand=preview_scrollbar.set)
+        
+        # 初始化UI显示
+        self.update_recipe_ui()
+    
+    def update_recipe_ui(self):
+        """根据选择的配方类型更新UI"""
+        recipe_type = self.recipe_type.get()
+        
+        # 先移除所有专用框架（如果已经显示）
+        try:
+            self.crafting_frame.grid_forget()
+            self.furnace_frame.grid_forget()
+            self.brewing_frame.grid_forget()
+        except:
+            pass
+        
+        # 根据类型显示对应的框架
+        if recipe_type in ["crafting_shaped", "crafting_shapeless"]:
+            # 有序/无序合成 - 显示合成网格
+            self.crafting_frame.grid(row=4, column=0, columnspan=3, pady=10, padx=10, sticky="ew")
+        elif recipe_type == "furnace":
+            # 熔炉配方 - 显示熔炉设置
+            self.furnace_frame.grid(row=4, column=0, columnspan=3, pady=10, padx=10, sticky="ew")
+        elif recipe_type == "brewing":
+            # 酿造配方 - 显示酿造设置
+            self.brewing_frame.grid(row=4, column=0, columnspan=3, pady=10, padx=10, sticky="ew")
     
     # ==================== 掉落表配置 ====================
     def create_loot_table_config(self, parent):
@@ -1853,67 +1906,6 @@ class Editor:
             json.dump(spawn_config, f, indent=2)
     
     # ==================== 配方相关方法 ====================
-    def update_recipe_ui(self):
-        """更新配方UI"""
-        recipe_type = self.recipe_type.get()
-        
-        # 隐藏所有特定框架
-        if hasattr(self, 'furnace_frame'):
-            self.furnace_frame.grid_remove()
-        if hasattr(self, 'brewing_frame'):
-            self.brewing_frame.grid_remove()
-        
-        if recipe_type == "furnace":
-            self.show_furnace_ui()
-        elif recipe_type == "brewing":
-            self.show_brewing_ui()
-    
-    def show_furnace_ui(self):
-        """显示熔炉配方UI"""
-        if not hasattr(self, 'furnace_frame'):
-            return
-            
-        self.furnace_frame.grid(row=5, column=0, columnspan=3, pady=10, padx=10, sticky="ew")
-        
-        # 清空现有内容
-        for widget in self.furnace_frame.winfo_children():
-            widget.destroy()
-        
-        # 熔炉配方特定控件
-        ttk.Label(self.furnace_frame, text="输入物品:").grid(row=0, column=0, pady=5, padx=5, sticky="w")
-        self.furnace_input = ttk.Entry(self.furnace_frame, width=30)
-        self.furnace_input.grid(row=0, column=1, pady=5, padx=5, sticky="w")
-        
-        ttk.Label(self.furnace_frame, text="经验值:").grid(row=1, column=0, pady=5, padx=5, sticky="w")
-        self.furnace_experience = ttk.Spinbox(self.furnace_frame, from_=0, to=10, increment=0.1, width=10)
-        self.furnace_experience.grid(row=1, column=1, pady=5, padx=5, sticky="w")
-        self.furnace_experience.insert(0, "0.1")
-        
-        ttk.Label(self.furnace_frame, text="烧炼时间:").grid(row=2, column=0, pady=5, padx=5, sticky="w")
-        self.furnace_time = ttk.Spinbox(self.furnace_frame, from_=1, to=1000, width=10)
-        self.furnace_time.grid(row=2, column=1, pady=5, padx=5, sticky="w")
-        self.furnace_time.insert(0, "200")
-    
-    def show_brewing_ui(self):
-        """显示酿造配方UI"""
-        if not hasattr(self, 'brewing_frame'):
-            return
-            
-        self.brewing_frame.grid(row=5, column=0, columnspan=3, pady=10, padx=10, sticky="ew")
-        
-        # 清空现有内容
-        for widget in self.brewing_frame.winfo_children():
-            widget.destroy()
-        
-        # 酿造配方特定控件
-        ttk.Label(self.brewing_frame, text="输入物品:").grid(row=0, column=0, pady=5, padx=5, sticky="w")
-        self.brewing_input = ttk.Entry(self.brewing_frame, width=30)
-        self.brewing_input.grid(row=0, column=1, pady=5, padx=5, sticky="w")
-        
-        ttk.Label(self.brewing_frame, text="试剂:").grid(row=1, column=0, pady=5, padx=5, sticky="w")
-        self.brewing_reagent = ttk.Entry(self.brewing_frame, width=30)
-        self.brewing_reagent.grid(row=1, column=1, pady=5, padx=5, sticky="w")
-    
     def generate_recipe_json(self):
         """生成配方JSON配置"""
         recipe_type = self.recipe_type.get()
@@ -1925,72 +1917,73 @@ class Editor:
             return
         
         # 构建配方配置
-        if recipe_type == "crafting_shaped":
-            # 有序合成
-            pattern = []
-            keys = {}
-            
-            # 读取3x3网格
-            for i in range(3):
-                row = ""
-                for j in range(3):
-                    item = self.recipe_grid[i][j].get().strip()
-                    if item:
-                        key = chr(65 + j)  # A, B, C, ...
-                        row += key
-                        keys[key] = {"item": item}
-                    else:
-                        row += " "
-                if row.strip():
-                    pattern.append(row)
-            
-            if not pattern:
-                messagebox.showwarning("警告", "请至少填入一个物品")
-                return
-            
-            recipe_config = {
-                "format_version": "1.20.0",
-                "minecraft:recipe_shaped": {
-                    "description": {
-                        "identifier": self.recipe_identifier.get().strip() or f"wiki:recipe_{output.split(':')[-1]}"
-                    },
-                    "tags": ["crafting_table"],
-                    "pattern": pattern,
-                    "key": keys,
-                    "result": {
-                        "item": output,
-                        "count": int(output_count)
+        if recipe_type in ["crafting_shaped", "crafting_shapeless"]:
+            # 有序/无序合成
+            if recipe_type == "crafting_shaped":
+                # 有序合成
+                pattern = []
+                keys = {}
+                
+                # 读取3x3网格
+                for i in range(3):
+                    row = ""
+                    for j in range(3):
+                        item = self.recipe_grid[i][j].get().strip()
+                        if item:
+                            key = chr(65 + j)  # A, B, C, ...
+                            row += key
+                            keys[key] = {"item": item}
+                        else:
+                            row += " "
+                    if row.strip():
+                        pattern.append(row)
+                
+                if not pattern:
+                    messagebox.showwarning("警告", "请至少填入一个物品")
+                    return
+                
+                recipe_config = {
+                    "format_version": "1.20.0",
+                    "minecraft:recipe_shaped": {
+                        "description": {
+                            "identifier": self.recipe_identifier.get().strip() or f"wiki:recipe_{output.split(':')[-1]}"
+                        },
+                        "tags": ["crafting_table"],
+                        "pattern": pattern,
+                        "key": keys,
+                        "result": {
+                            "item": output,
+                            "count": int(output_count)
+                        }
                     }
                 }
-            }
-            
-        elif recipe_type == "crafting_shapeless":
-            # 无序合成
-            ingredients = []
-            for i in range(3):
-                for j in range(3):
-                    item = self.recipe_grid[i][j].get().strip()
-                    if item:
-                        ingredients.append({"item": item})
-            
-            if not ingredients:
-                messagebox.showwarning("警告", "请至少填入一个物品")
-                return
-            
-            recipe_config = {
-                "format_version": "1.20.0",
-                "minecraft:recipe_shapeless": {
-                    "description": {
-                        "identifier": self.recipe_identifier.get().strip() or f"wiki:recipe_{output.split(':')[-1]}"
-                    },
-                    "tags": ["crafting_table"],
-                    "ingredients": ingredients,
-                    "result": {
-                        "item": output,
-                        "count": int(output_count)
+            else:  # crafting_shapeless
+                # 无序合成
+                ingredients = []
+                for i in range(3):
+                    for j in range(3):
+                        item = self.recipe_grid[i][j].get().strip()
+                        if item:
+                            ingredients.append({"item": item})
+                
+                if not ingredients:
+                    messagebox.showwarning("警告", "请至少填入一个物品")
+                    return
+                
+                recipe_config = {
+                    "format_version": "1.20.0",
+                    "minecraft:recipe_shapeless": {
+                        "description": {
+                            "identifier": self.recipe_identifier.get().strip() or f"wiki:recipe_{output.split(':')[-1]}"
+                        },
+                        "tags": ["crafting_table"],
+                        "ingredients": ingredients,
+                        "result": {
+                            "item": output,
+                            "count": int(output_count)
+                        }
                     }
                 }
-            }
             
         elif recipe_type == "furnace":
             # 熔炉配方
@@ -2017,6 +2010,10 @@ class Editor:
                 messagebox.showwarning("警告", "请输入输入物品")
                 return
             
+            if not hasattr(self, 'brewing_reagent') or not self.brewing_reagent.get().strip():
+                messagebox.showwarning("警告", "请输入试剂")
+                return
+            
             recipe_config = {
                 "format_version": "1.20.0",
                 "minecraft:recipe_brewing_mix": {
@@ -2025,7 +2022,7 @@ class Editor:
                     },
                     "tags": ["brewing_stand"],
                     "input": self.brewing_input.get().strip(),
-                    "reagent": self.brewing_reagent.get().strip() if hasattr(self, 'brewing_reagent') else "",
+                    "reagent": self.brewing_reagent.get().strip(),
                     "output": output
                 }
             }

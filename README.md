@@ -1,44 +1,44 @@
-Quick IDE ----为minecraft Bedrock addons所开发的IDE
+Quick IDE ---- An IDE developed for Minecraft Bedrock addons
 
-注:中英文版本是分开的，同时,由于这是一个新项目,bug与问题会很多,欢迎反馈!
+Note: The Chinese and English versions are separate. Also, as this is a new project, there will be many bugs and issues. Feedback is welcome!
 
-项目简介
+Project Overview
 
-Quick IDE是使用python tkinter编写的minecraft Bedrock addons开发工具,目的在于快速开发minecraft Bedrock addons。
+Quick IDE is a development tool for Minecraft Bedrock addons written in Python tkinter, aimed at quickly developing Minecraft Bedrock addons.
 
-图形化界面
+Graphical Interface
 
-通过下拉菜单来生成.json,支持各类配置：
+Generate .json files through drop-down menus, supporting various configurations:
 
-支持的功能：
-✅物品配置
-✅方块配置
-✅实体配置
-✅配方配置
-✅掉落表配置
-✅物品分页配置
-⏳结构配置50%
-⏳生物群系配置50%
-⏳维度配置50%
+Supported Features:
+✅ Item Configuration
+✅ Block Configuration
+✅ Entity Configuration
+✅ Recipe Configuration
+✅ Loot Table Configuration
+✅ Item Pagination Configuration
+⏳ Structure Configuration 50%
+⏳ Biome Configuration 50%
+⏳ Dimension Configuration 50%
 
-安装
+Installation
 
-macOS版本:
+macOS version:
 
-下载.zip文件(选择合适的语言cn/en)
-解压,将.app文件放入应用程序文件夹
-打开程序,如无法打开,可在系统偏好设置中的(隐私与安全性)中配置权限
+Download the .zip file (choose the appropriate language cn/en)
+Extract it and place the .app file into the Applications folder
+Open the programme; if it cannot be opened, configure permissions in System Preferences under Privacy & Security
 
-windows版本:
+Windows version:
 
-⏳即将到来
+⏳ Coming soon
 
-linux版本:
+Linux version:
 
-⏳即将到来
+⏳ Coming soon
 
-结语:
+Conclusion:
 
-Quick IDE目前正处在测试阶段,如有bug感谢反馈!
+Quick IDE is currently in the testing phase. If there are any bugs, feedback is appreciated!
 18610619405@163.com
-感谢
+Thank you
